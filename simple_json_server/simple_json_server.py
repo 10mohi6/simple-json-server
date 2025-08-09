@@ -2,33 +2,20 @@ import json
 import os
 import uuid
 import mimetypes
+import argparse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
+from importlib import resources
 
 # --- Settings ---
-DB_FILE = "db.json"
-STATIC_FOLDER = "public"
-HOST = "127.0.0.1"
-PORT = 5000
+# Find the path to the packaged 'public' directory
+try:
+    STATIC_PATH = resources.files('simple_json_server').joinpath('public')
+except (AttributeError, ModuleNotFoundError):
+    # Fallback for older Python versions or when not installed
+    STATIC_PATH = os.path.join(os.path.dirname(__file__), 'public')
+
 PER_PAGE_DEFAULT = 10
-
-# --- Database Operations ---
-def load_db():
-    """Load the db.json file."""
-    try:
-        with open(DB_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        print(f"Warning: '{DB_FILE}' not found or invalid. Starting with an empty DB.")
-        return {}
-
-def save_db(db):
-    """Write to the db.json file."""
-    try:
-        with open(DB_FILE, "w", encoding="utf-8") as f:
-            json.dump(db, f, indent=2, ensure_ascii=False)
-    except IOError as e:
-        print(f"Error: Failed to save DB: {e}")
 
 # --- API Logic Handler ---
 class APIHandler:
@@ -44,6 +31,19 @@ class APIHandler:
 
     def process_request(self):
         """Main entry point to handle the API request."""
+        # Handle special /_db endpoint for raw DB access
+        if self.path == "/_db":
+            if self.method == "GET":
+                return 200, self.db, {}
+            elif self.method == "PUT":
+                if not isinstance(self.body, dict):
+                    raise ValueError("Request body for /_db must be a JSON object.")
+                self.db.clear()
+                self.db.update(self.body)
+                return 200, self.db, {}
+            else:
+                return 405, {"error": "Method Not Allowed for /_db"}, {}
+
         parts = self.path.strip("/").split("/")
         self.resource = parts[0] if parts else ""
         self.item_id = parts[1] if len(parts) > 1 else None
@@ -253,6 +253,12 @@ class APIHandler:
 
 # --- Main Server Handler ---
 class JSONServer(BaseHTTPRequestHandler):
+    directory = STATIC_PATH
+
+    def __init__(self, *args, db_path="db.json", **kwargs):
+        self.db_path = db_path
+        super().__init__(*args, **kwargs)
+
     def _send_response(self, status_code, data=None, headers=None):
         self.send_response(status_code)
         self.send_header("Content-type", "application/json")
@@ -273,8 +279,8 @@ class JSONServer(BaseHTTPRequestHandler):
 
     def _handle_request(self, method):
         # Static file serving
-        if method == "GET" and os.path.exists(STATIC_FOLDER):
-            static_path = os.path.join(STATIC_FOLDER, self.path.lstrip('/'))
+        if method == "GET" and os.path.exists(self.directory):
+            static_path = os.path.join(self.directory, self.path.lstrip('/'))
             if os.path.isfile(static_path):
                 self.send_response(200)
                 mimetype, _ = mimetypes.guess_type(static_path)
@@ -285,7 +291,7 @@ class JSONServer(BaseHTTPRequestHandler):
                 return
 
         # API logic
-        db = load_db()
+        db = self.load_db()
         body = self._get_request_body() if method in ["POST", "PUT", "PATCH"] else None
         
         try:
@@ -295,9 +301,24 @@ class JSONServer(BaseHTTPRequestHandler):
             status_code, data, headers = (400 if isinstance(e, ValueError) else 404), {"error": str(e)}, {}
 
         if method in ["POST", "PUT", "PATCH", "DELETE"]:
-            save_db(db)
+            self.save_db(db)
 
         self._send_response(status_code, data, headers)
+
+    def load_db(self):
+        try:
+            with open(self.db_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            print(f"Warning: '{self.db_path}' not found or invalid. Starting with an empty DB.")
+            return {}
+
+    def save_db(self, db):
+        try:
+            with open(self.db_path, "w", encoding="utf-8") as f:
+                json.dump(db, f, indent=2, ensure_ascii=False)
+        except IOError as e:
+            print(f"Error: Failed to save DB: {e}")
 
     def do_GET(self):
         self._handle_request("GET")
@@ -320,11 +341,21 @@ class JSONServer(BaseHTTPRequestHandler):
 # --- Server Startup ---
 def main():
     """Start the server."""
-    server_address = (HOST, PORT)
-    httpd = HTTPServer(server_address, JSONServer)
-    print(f"Python JSON Server is running on http://{HOST}:{PORT}")
-    print(f"Watching DB file: {DB_FILE}")
-    print(f"Serving static files from: {STATIC_FOLDER}")
+    parser = argparse.ArgumentParser(description="Start a simple JSON server.")
+    parser.add_argument("--host", default="127.0.0.1", help="Host to bind the server to.")
+    parser.add_argument("--port", type=int, default=5000, help="Port to run the server on.")
+    parser.add_argument("--file", default="db.json", help="Path to the database file.")
+    args = parser.parse_args()
+
+    def handler(*h_args, **h_kwargs):
+        return JSONServer(*h_args, db_path=args.file, **h_kwargs)
+
+    server_address = (args.host, args.port)
+    httpd = HTTPServer(server_address, handler)
+    
+    print(f"Python JSON Server is running on http://{args.host}:{args.port}")
+    print(f"Watching DB file: {args.file}")
+    print(f"Serving static files from: {STATIC_PATH}")
     print("Press CTRL+C to stop")
     httpd.serve_forever()
 

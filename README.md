@@ -1,6 +1,9 @@
 # Simple JSON Server
 
 [![PyPI version](https://badge.fury.io/py/simple-json-server.svg)](https://badge.fury.io/py/simple-json-server)
+[![PyPI Downloads](https://static.pepy.tech/badge/simple-json-server)](https://pepy.tech/projects/simple-json-server)
+[![Python Version](https://img.shields.io/pypi/pyversions/simple-json-server.svg)](https://pypi.org/project/simple-json-server)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI/CD Pipeline](https://github.com/10mohi6/simple-json-server/actions/workflows/publish-to-pypi.yml/badge.svg)](https://github.com/10mohi6/simple-json-server/actions/workflows/publish-to-pypi.yml)
 [![Coverage Status](https://codecov.io/gh/10mohi6/simple-json-server/branch/main/graph/badge.svg)](https://codecov.io/gh/10mohi6/simple-json-server)
 
@@ -11,13 +14,14 @@ Inspired by `json-server`.
 ## Features
 
 - **Zero Dependencies:** Runs with just a standard Python installation.
+- **Web Admin Interface:** A browser-based UI to view, add, edit, and delete data and resources.
 - **RESTful API:** Automatically generates a full REST API from a `db.json` file.
 - **CRUD Operations:** Supports `GET`, `POST`, `PUT`, `PATCH`, and `DELETE` methods.
 - **Advanced Querying:** Filter, sort, and paginate your responses.
 - **Full-text Search:** Perform a simple text search across all fields in a resource.
 - **Relationships:** Supports both parent (`_expand`) and child (`_embed`) relationships.
 - **Cascading Deletes:** Delete dependent resources automatically using `_dependent`.
-- **Static File Serving:** Serves static files from the `public` directory.
+- **Static File Serving:** The admin UI is bundled with the package. You can also serve your own static files from a `public` directory.
 
 ## Installation
 
@@ -29,31 +33,57 @@ pip install simple-json-server
 
 ## Usage
 
-1.  **Create a `db.json` file:**
-    In your project directory, create a `db.json` file. The keys will be treated as API resources.
+1.  **Create a `db.json` file (optional):**
+    In your project directory, create a `db.json` file. The keys will be treated as API resources. If you don't create one, the server will start with an empty database.
 
     ```json
     {
       "posts": [
-        { "id": "1", "title": "json-server", "views": 100, "authorId": "1" },
-        { "id": "2", "title": "python-flask", "views": 200, "authorId": "1" }
+        { "id": "1", "title": "json-server", "views": 100, "authorId": "1" }
       ],
       "authors": [
         { "id": "1", "name": "Alice" }
-      ],
-      "comments": [
-        { "id": "1", "text": "comment 1", "postId": "1" }
       ]
     }
     ```
 
 2.  **Start the server:**
-    Run the following command in the directory containing your `db.json` file:
+    Run the following command in your project directory:
     ```bash
     simple-json-server
     ```
 
     The server will be running at `http://127.0.0.1:5000`.
+
+### Command-Line Options
+
+You can customize the server's behavior with the following options:
+
+- **Port:** Run on a different port.
+  ```bash
+  simple-json-server --port 8080
+  ```
+
+- **Host:** Make the server accessible on your local network.
+  ```bash
+  simple-json-server --host 0.0.0.0
+  ```
+
+- **Database File:** Use a different database file.
+  ```bash
+  simple-json-server --file my_api_data.json
+  ```
+
+## Admin Interface
+
+An admin UI is bundled with the server to easily manage your data.
+
+- **URL:** `http://127.0.0.1:5000/admin.html`
+
+**Features:**
+- **Resource Management:** Add, rename, and delete resources (e.g., `posts`, `users`) directly from the UI.
+- **Data Management:** View, add, edit, and delete individual data entries within a resource using a JSON editor.
+- **Query Tester:** A simple interface to test your API endpoints with different query parameters.
 
 ## API Endpoints
 
@@ -75,9 +105,7 @@ Based on the `db.json` example above, the following endpoints are available:
 
 ## Static File Serving
 
-Create a `public` folder in the same directory and place your static files (e.g., `index.html`, `style.css`) inside. The server will automatically serve them.
-
-- `http://127.0.0.1:5000/index.html`
+If you create a `public` folder in the directory where you run the server, it will be used to serve your own static files, overriding the bundled admin UI if there are name conflicts (e.g., `index.html`).
 
 ## Development
 

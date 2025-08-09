@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Server Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <h4 class="px-3">Resources</h4>
+                    <ul id="resource-list" class="nav flex-column"></ul>
+                    <hr>
+                    <div class="px-3">
+                        <button id="manage-resources-btn" class="btn btn-outline-secondary btn-sm">Manage Resources</button>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 id="current-resource-title" class="h2">Admin</h1>
+                </div>
+
+                <!-- Query Tester -->
+                <div class="card mb-4">
+                    <div class="card-header">Query Tester</div>
+                    <div class="card-body">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="api-base-url">/</span>
+                            <input type="text" id="query-input" class="form-control" placeholder="posts?_sort=id&_page=1">
+                            <button id="send-query-btn" class="btn btn-primary">Send</button>
+                        </div>
+                        <pre id="query-result" class="bg-dark text-white p-3 rounded"><code></code></pre>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h2 id="table-title">Data</h2>
+                    <button id="add-item-btn" class="btn btn-success">Add New Item</button>
+                </div>
+                <div class="table-responsive">
+                    <table id="data-table" class="table table-striped table-sm">
+                        <thead>
+                            <!-- Table headers will be populated here by JS -->
+                        </thead>
+                        <tbody>
+                            <!-- Table rows will be populated here by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal for Add/Edit -->
+    <div class="modal fade" id="form-modal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-title">Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="item-form">
+                        <input type="hidden" id="edit-item-id">
+                        <div id="form-fields" class="mb-3">
+                            <!-- Form fields will be populated here by JS -->
+                        </div>
+                        <div class="form-text">Item data in JSON format:</div>
+                        <textarea id="json-editor" class="form-control" rows="10"></textarea>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" id="save-item-btn" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Resource Management -->
+    <div class="modal fade" id="resources-modal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Manage Resources</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Edit the database structure directly. Renaming a resource key will rename the endpoint. Deleting a key will remove the resource and all its data.</p>
+                    <div id="resource-editor-container"></div>
+                    <hr>
+                    <h6>Add New Resource</h6>
+                    <div class="input-group">
+                        <input type="text" id="new-resource-name" class="form-control" placeholder="New resource name (e.g., users)">
+                        <button id="add-resource-btn" class="btn btn-success">Add</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="save-resources-btn" class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 [project]
 name = "simple-json-server"
-version = "0.1.0"
+version = "0.2.0"
 description = "A zero-dependency, lightweight REST API server based on a simple JSON file."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -42,3 +42,6 @@ dev = [
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.package-data]
+"simple_json_server" = ["public/*"]
